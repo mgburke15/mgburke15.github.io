@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--<script src="https://d3js.org/d3.v5.min.js"></script>-->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <title>ghd3</title>
+</head>
+<body>
+<h1>CS480x Assignment 1</h1>
+<h3>Madeline Burke</h3>
+<!--https://www.dashingd3js.com/basic-building-blocks-->
+
+</body>
+</html>
+
+
+<script>
+  console.log(d3); // test if d3 is loaded
+
+  //based off of tutorial from https://www.dashingd3js.com/using-the-svg-coordinate-space
+
+  //CIRCLES
+  var circle_svg = d3.select("body").append("svg")
+      .attr("width", 250)
+      .attr("height", 175)
+      .style("border", "1px solid black");
+
+  var circleData = [
+      {"cy": 30, "color": "green"},
+      {"cy": 80, "color": "purple"},
+      {"cy": 130, "color": "red"}
+  ];
+
+  var circles = circle_svg.selectAll("circle")
+      .data(circleData)
+      .enter()
+      .append("circle");
+
+  var circleAttr = circles
+      .attr("cx", 50)
+      .attr("cy", function (d) {return d.cy; })
+      .attr("r", 20)
+      .style("fill", function (d) { return d.color; });
+
+
+  //RECTANGLES
+  var rect_svg = d3.select("body").append("svg")
+      .attr("width", 250)
+      .attr("height", 225)
+      .style("border", "1px solid gray");
+
+  var rectData = [
+      {"y": 30, "color": "green"},
+      {"y": 90, "color": "purple"},
+      {"y": 150, "color": "red"}
+  ];
+
+  var rectangles = rect_svg.selectAll("rect")
+      .data(rectData)
+      .enter()
+      .append("rect");
+
+  var rectAttr = rectangles
+      .attr("x", 20)
+      .attr("y", function(d) { return d.y; })
+      .attr("width", 100)
+      .attr("height", 50)
+      .style("fill", function (d) { return d.color });
+
+  //LINES
+  var line_svg = d3.select("body").append("svg")
+      .attr("width", 250)
+      .attr("height", 150)
+      .style("border", "1px solid black");
+
+  var lineData = [
+      { "x": 20,  "y": 10},
+      { "x": 50,  "y": 30},
+      { "x": 80,  "y": 10},
+      { "x": 110, "y": 30},
+      { "x": 140, "y": 10},
+      { "x": 170, "y": 30}
+  ];
+
+  var lineData2 = [
+      { "x": 20,  "y": 60},
+      { "x": 50,  "y": 80},
+      { "x": 80,  "y": 60},
+      { "x": 110, "y": 80},
+      { "x": 140, "y": 60},
+      { "x": 170, "y": 80}
+  ];
+
+  var lineData3 = [
+      { "x": 20,  "y": 110},
+      { "x": 50,  "y": 130},
+      { "x": 80,  "y": 110},
+      { "x": 110, "y": 130},
+      { "x": 140, "y": 110},
+      { "x": 170, "y": 130}
+  ];
+
+  var lineFunction = d3.line()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .curve(d3.curveNatural);
+
+  var lineGraph = line_svg.append("path")
+      .attr("d", lineFunction(lineData))
+      .attr("stroke", "green")
+      .attr("stroke-width", 5)
+      .attr("fill", "none");
+
+  var lineGraph2 = line_svg.append("path")
+      .attr("d", lineFunction(lineData2))
+      .attr("stroke", "purple")
+      .attr("stroke-width", 5)
+      .attr("fill", "none");
+
+  var lineGraph3 = line_svg.append("path")
+      .attr("d", lineFunction(lineData3))
+      .attr("stroke", "red")
+      .attr("stroke-width", 5)
+      .attr("fill", "none");
+
+
+  //POLYGONS
+  var polygon_svg = d3.select("body").append("svg")
+      .attr("width", 250)
+      .attr("height", 175)
+      .style("border", "1px solid gray");
+
+  var polygonData = [
+      { "x": 20, "y": 20},
+      { "x": 20, "y": 60},
+      { "x": 60, "y": 60}
+  ];
+
+  var polygonData2 = [
+      { "x": 60, "y": 70},
+      { "x": 20, "y": 110},
+      { "x": 60, "y": 110}
+  ];
+
+  var polygonData3 = [
+      { "x": 20, "y": 120},
+      { "x": 20, "y": 160},
+      { "x": 60, "y": 160}
+  ];
+
+  var polygonFunction =  d3.line()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .curve(d3.curveLinearClosed);
+
+  var polygonGraph = polygon_svg.append("path")
+      .attr("d", polygonFunction(polygonData))
+      .attr("stroke", "green")
+      .attr("fill", "green");
+
+  var polygonGraph2 = polygon_svg.append("path")
+      .attr("d", polygonFunction(polygonData2))
+      .attr("stroke", "purple")
+      .attr("fill", "purple");
+
+  var polygonGraph3 = polygon_svg.append("path")
+      .attr("d", polygonFunction(polygonData3))
+      .attr("stroke", "red")
+      .attr("fill", "red");
+
+
+
+</script>
