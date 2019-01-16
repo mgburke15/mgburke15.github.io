@@ -3,13 +3,33 @@
 <head>
     <!--<script src="https://d3js.org/d3.v5.min.js"></script>-->
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Barrio' rel='stylesheet'>
     <title>ghd3</title>
 </head>
-<body>
-<h1>CS480x Assignment 1</h1>
-<h3>Madeline Burke</h3>
+<style>
+    body {
+        font-family: 'Barrio';
+        background-color: lightblue;
+    }
+</style>
+<body style="text-align: center">
+<h1>Fun with Shapes & Colors!</h1>
 <!--https://www.dashingd3js.com/basic-building-blocks-->
-
+<div id="reset" style="text-align: center">
+    <!--<p>Mouse over the circles and squares below to change their color and position. Click the <b>RESET</b> button-->
+    <!--to return them to their orginal state.</p>-->
+    <input name="resetButton"
+           type="button"
+           value="RESET PAGE"
+           onclick="resetShapes()"/>
+</div>
+<br>
+<div id="rectangles"></div>
+<br>
+<div id="divider"></div>
+<br>
+<div id="circles"></div>
+<br>
 </body>
 </html>
 
@@ -17,24 +37,43 @@
 <script>
   console.log(d3); // test if d3 is loaded
 
-  //based off of tutorial from https://www.dashingd3js.com/using-the-svg-coordinate-space
+  //based off of tutorials from
+  // https://www.dashingd3js.com/using-the-svg-coordinate-space
+  // https://www.dashingd3js.com/svg-text-element
+
+  //SVGs
+  var rect_svg = d3.select("#rectangles").append("svg")
+      .attr("width", 550)
+      .attr("height", 250)
+      .style("background-color", "floralwhite");
+      // .style("border", "1px solid gray");
+
+  var line_svg = d3.select("#divider").append("svg")
+      .attr("width", 500)
+      .attr("height", 50);
+      //.style("border", "1px solid gray");
+
+  var drag_svg = d3.select("#circles").append("svg")
+      .attr("width", 550)
+      .attr("height", 400)
+      .style("background-color", "floralwhite");
 
   //CIRCLES
-  var circle_svg = d3.select("body").append("svg")
-      .attr("width", 250)
-      .attr("height", 175)
-      .style("border", "1px solid black");
-
   var circleData = [
-      {"cy": 30, "color": "green"},
-      {"cy": 80, "color": "purple"},
-      {"cy": 130, "color": "red"}
+      {"cy": 60, "color": "red"},
+      {"cy": 115, "color": "purple"},
+      {"cy": 170, "color": "green"},
+      {"cy": 225, "color": "yellow"},
+      {"cy": 280, "color": "blue"},
+      {"cy": 335, "color": "orangered"}
   ];
 
-  var circles = circle_svg.selectAll("circle")
+  var circles = drag_svg.selectAll("circle")
       .data(circleData)
       .enter()
-      .append("circle");
+      .append("circle")
+      .on("mouseover", function() { d3.select(this).transition().attr("r", 25)})
+      .on("mouseout", function() { d3.select(this).transition().attr("r", 20)});
 
   var circleAttr = circles
       .attr("cx", 50)
@@ -44,21 +83,20 @@
 
 
   //RECTANGLES
-  var rect_svg = d3.select("body").append("svg")
-      .attr("width", 250)
-      .attr("height", 225)
-      .style("border", "1px solid gray");
-
   var rectData = [
-      {"y": 30, "color": "green"},
-      {"y": 90, "color": "purple"},
-      {"y": 150, "color": "red"}
+      {"y": 30, "color": "red", "color2": "green"},
+      {"y": 90, "color": "blue", "color2": "orangered"},
+      {"y": 150, "color": "yellow", "color2": "purple"}
   ];
 
   var rectangles = rect_svg.selectAll("rect")
       .data(rectData)
       .enter()
-      .append("rect");
+      .append("rect")
+      .on("mouseover", function() {
+          d3.select(this).transition().style("fill", function(d) { return d.color2 })
+              .attr("x", 420)
+              .duration(500)});
 
   var rectAttr = rectangles
       .attr("x", 20)
@@ -67,37 +105,35 @@
       .attr("height", 50)
       .style("fill", function (d) { return d.color });
 
-  //LINES
-  var line_svg = d3.select("body").append("svg")
-      .attr("width", 250)
-      .attr("height", 150)
-      .style("border", "1px solid black");
 
+  function resetShapes() {
+      rect_svg.transition().selectAll("rect")
+          .style("fill", function(d) { return d.color })
+          .attr("x", 20);
+
+      drag_svg.transition().selectAll("circle")
+          .attr("cx", 50)
+          .attr("cy", function(d) { return d.cy });
+  }
+
+  //LINES
   var lineData = [
       { "x": 20,  "y": 10},
       { "x": 50,  "y": 30},
       { "x": 80,  "y": 10},
       { "x": 110, "y": 30},
       { "x": 140, "y": 10},
-      { "x": 170, "y": 30}
-  ];
-
-  var lineData2 = [
-      { "x": 20,  "y": 60},
-      { "x": 50,  "y": 80},
-      { "x": 80,  "y": 60},
-      { "x": 110, "y": 80},
-      { "x": 140, "y": 60},
-      { "x": 170, "y": 80}
-  ];
-
-  var lineData3 = [
-      { "x": 20,  "y": 110},
-      { "x": 50,  "y": 130},
-      { "x": 80,  "y": 110},
-      { "x": 110, "y": 130},
-      { "x": 140, "y": 110},
-      { "x": 170, "y": 130}
+      { "x": 170, "y": 30},
+      { "x": 200,  "y": 10},
+      { "x": 230,  "y": 30},
+      { "x": 260, "y": 10},
+      { "x": 290, "y": 30},
+      { "x": 320, "y": 10},
+      { "x": 350,  "y": 30},
+      { "x": 380,  "y": 10},
+      { "x": 410, "y": 30},
+      { "x": 440, "y": 10},
+      { "x": 470, "y": 30}
   ];
 
   var lineFunction = d3.line()
@@ -107,45 +143,22 @@
 
   var lineGraph = line_svg.append("path")
       .attr("d", lineFunction(lineData))
-      .attr("stroke", "green")
-      .attr("stroke-width", 5)
-      .attr("fill", "none");
-
-  var lineGraph2 = line_svg.append("path")
-      .attr("d", lineFunction(lineData2))
-      .attr("stroke", "purple")
-      .attr("stroke-width", 5)
-      .attr("fill", "none");
-
-  var lineGraph3 = line_svg.append("path")
-      .attr("d", lineFunction(lineData3))
-      .attr("stroke", "red")
+      .attr("stroke", "pink")
       .attr("stroke-width", 5)
       .attr("fill", "none");
 
 
   //POLYGONS
-  var polygon_svg = d3.select("body").append("svg")
-      .attr("width", 250)
-      .attr("height", 175)
-      .style("border", "1px solid gray");
-
   var polygonData = [
-      { "x": 20, "y": 20},
-      { "x": 20, "y": 60},
-      { "x": 60, "y": 60}
+      { "x": 16, "y": 1},
+      { "x": 35, "y": 9},
+      { "x": 12, "y": 20}
   ];
 
   var polygonData2 = [
-      { "x": 60, "y": 70},
-      { "x": 20, "y": 110},
-      { "x": 60, "y": 110}
-  ];
-
-  var polygonData3 = [
-      { "x": 20, "y": 120},
-      { "x": 20, "y": 160},
-      { "x": 60, "y": 160}
+      { "x": 470, "y": 42},
+      { "x": 455, "y": 30},
+      { "x": 480, "y": 25}
   ];
 
   var polygonFunction =  d3.line()
@@ -153,21 +166,49 @@
       .y(function(d) { return d.y; })
       .curve(d3.curveLinearClosed);
 
-  var polygonGraph = polygon_svg.append("path")
+  var polygonGraph = line_svg.append("path")
       .attr("d", polygonFunction(polygonData))
-      .attr("stroke", "green")
-      .attr("fill", "green");
+      .attr("stroke", "white")
+      .attr("fill", "pink");
 
-  var polygonGraph2 = polygon_svg.append("path")
+  var polygonGraph2 = line_svg.append("path")
       .attr("d", polygonFunction(polygonData2))
-      .attr("stroke", "purple")
-      .attr("fill", "purple");
+      .attr("stroke", "white")
+      .attr("fill", "pink");
 
-  var polygonGraph3 = polygon_svg.append("path")
-      .attr("d", polygonFunction(polygonData3))
-      .attr("stroke", "red")
-      .attr("fill", "red");
+  //TEXT on polygons
+  var instructions = [
+      { "x": 0, "y": 45, "text": "HOVER" },
+      { "x": 455, "y": 15, "text": "DRAG" }
+  ];
 
+  var text = line_svg.selectAll("text")
+      .data(instructions)
+      .enter()
+      .append("text");
+
+  var textLabels = text
+      .attr("x", function(d) { return d.x })
+      .attr("y", function(d) { return d.y})
+      .text(function(d) { return d.text})
+      .style("fill", "white")
+      .style("font-size", "20px");
+
+
+  //Drag handler
+  var dragHandler = d3.drag()
+      .on("drag", function() {
+          d3.select(this)
+              .attr("cx", d3.event.x)
+              .attr("cy", d3.event.y);
+      });
+
+  dragHandler(drag_svg.selectAll("circle"));
+
+  //triangle above line pointing up that says hover over
+    //triangle below line pointing down that says click and drag
+    //move circles under the squiggle and make them draggable enlarge when mouse over
+    //have only rectangles on the top that change color and move when hovered over
 
 
 </script>
