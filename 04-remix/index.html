@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <title>A4-Remix</title>
+    <link href='https://fonts.googleapis.com/css?family=Aclonica' rel='stylesheet'>
+    <style>
+        .overlay {
+            fill: none;
+            pointer-events: all;
+        }
+
+        .focus circle {
+            fill: none;
+            stroke: none;
+        }
+
+        .focus line {
+            fill: none;
+            stroke: black;
+            stroke-width: 1px;
+        }
+
+        .mouse-line {
+            stroke: black;
+            stroke-width: 1px;
+            opacity: 0;
+        }
+
+        h2 {
+            font-family: Aclonica;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+<h2>
+    Ireland's Head of Government Since 1921
+</h2>
+<span id="bothcharts"></span>
+<span id="ireland"></span>
+<span id="n_ireland"></span>
+<span id="both"></span>
+</body>
+</html>
+
+<script>
+    console.log(d3);
+
+    var parseDate = d3.timeFormat("%m/%Y");
+    var bisectDate = d3.bisector(function (d) {
+        return d.start;
+    }).left;
+
+    var margin = {top: 20, right: 20, bottom: 30, left: 125},
+        width = 650 - margin.left - margin.right,
+        height = 600 - margin.top - margin.bottom;
+
+    ///////IRELAND//////
+    d3.csv("ireland.csv", function (d) {
+        return {
+            row: +d.Row,
+            name: d.Name,
+            start: new Date(d.start),
+            end: new Date(d.end),
+            party: d.Party,
+            country: d.Country
+        };
+    }).then(function (data) {
+
+        console.log(data);
+
+        //SVG
+        var margin = {top: 20, right: 20, bottom: 30, left: 125},
+            width = 650 - margin.left - margin.right,
+            height = 600 - margin.top - margin.bottom;
+
+        var plot_svg = d3.select('#ireland')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        plot_svg.append("svg:image")
+            .attr('xlink:href', "img/irl.gif")
+            .attr("width", width)
+            .attr("height", height)
+            .style("opacity", 0.3);
+
+        //COLORS
+        var color = d3.scaleOrdinal()
+            .domain(data.map(d => d.party))
+            .range([
+                '#66c2a5',
+                '#fc8d62',
+                '#8da0cb'
+            ]);
+
+        //TITLE
+        plot_svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " , 0)")
+            .style("text-anchor", "middle")
+            .style("font-family", "Aclonica")
+            .style("font-size", "1em")
+            .text("IRELAND");
+
+        //AXES
+        var timeScale = d3.scaleTime()
+            .domain([new Date(1921, 1, 1), new Date(2019, 3, 1)])
+            .range([0, width]);
+
+        var ordinalScale = d3.scaleBand()
+            .domain(data.map(d => d.name))
+            .range([0, height])
+            .paddingInner(0.25);
+
+        var xAxis = d3.axisBottom()
+            .scale(timeScale);
+        var yAxis = d3.axisLeft()
+            .scale(ordinalScale);
+
+        //x-axis
+        plot_svg.append('g')
+            .attr('transform', 'translate(0,' + height + ')')
+            .attr('class', 'x axis')
+            .call(xAxis);
+
+        //adapted from http://www.d3noob.org/2012/12/adding-axis-labels-to-d3js-graph.html
+        plot_svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom - 3) + ")")
+            .style("text-anchor", "middle")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em")
+            .text("Year");
+
+        //y-axis
+        plot_svg.append('g')
+            .attr('transform', 'translate(0,0)')
+            .attr('class', 'y axis')
+            .call(yAxis);
+
+        //adapted from http://www.d3noob.org/2012/12/adding-axis-labels-to-d3js-graph.html
+        plot_svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em")
+            .text("Leader");
+
+        var rects = plot_svg.selectAll("rect")
+            .data(data);
+
+        rects.enter().append("rect")
+            .attr("x", function (d) {
+                return timeScale(d.start);
+            })
+            .attr("y", function (d) {
+                return ordinalScale(d.name);
+            })
+            .attr("width", function (d) {
+                return timeScale(d.end) - timeScale(d.start)
+            })
+            .attr("height", ordinalScale.bandwidth())
+            .style('fill', function(d) {
+                return color(d.party)
+            });
+
+        //LEGEND
+        //adapted from http://bl.ocks.org/Ctuauden/52d057254665400f561ef73cb6e5841a
+        var legend = plot_svg.selectAll(".legend")
+            .data(color.domain())
+            .enter()
+            .append("g")
+            .attr("class","legend")
+            .attr("transform", "translate(" + 100 + "," + 60 + ")");
+
+        legend.append("rect")
+            .attr("x", width-250)
+            .attr("y", function(d, i) { return 20 * i; })
+            .attr("width", 15)
+            .attr("height", 15)
+            .style("fill", function(d) { return color(d)});
+
+        //legend labels
+        legend.append("text")
+            .attr("x", width-225)
+            .attr("text-anchor", "right")
+            .attr("dy", "1em")
+            .attr("y", function(d, i) { return 20 * i; })
+            .text(function(d) {return d})
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em");
+
+        //legend title
+        legend.append("text")
+            .attr("x",width - 215)
+            .attr('text-anchor', 'right')
+            .attr("dy", "-.2em")
+            .attr("y",-10)
+            .text("Political Party")
+            .style("font-family", "Aclonica")
+            .style("font-size", "0.75em");
+
+        //TOOLTIP
+        //adapted from https://bl.ocks.org/mbostock/3902569
+        var focus = plot_svg.append("g")
+            .attr("class", "focus")
+            .style("display", "none");
+
+        focus.append("circle")
+            .attr('r', 0.5);
+
+        focus.append('line')
+            .classed('y', true);
+
+        focus.append("text")
+            .attr("class", "name")
+            .attr("x", -200)
+            .attr("dy", ".35em")
+            .style("font-family", "Arial")
+            .style("font-size", "0.85em");
+
+        focus.append("text")
+            .attr("class", "dates")
+            .attr("x", 9)
+            .attr("dy", "1.5em")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em");
+
+        plot_svg.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("height", height)
+            .on("mouseover", function() { focus.style("display", null); })
+            .on("mouseout", function() { focus.style("display", "none"); })
+            .on("mousemove", mousemove);
+
+
+        function mousemove() {
+            var x0 = timeScale.invert(d3.mouse(this)[0]),
+                i = bisectDate(data, x0, 1),
+                d0 = data[i - 1],
+                d1 = data[i],
+                d = x0 - d0.start > d1.end - x0 ? d1 : d0;
+            focus.attr("transform","translate(" + timeScale(d.start) + "," + ordinalScale(d.name) + ")");
+            focus.select('line.y')
+                .attr('x1', 0)
+                .attr('x2', 0)
+                .attr('y1', 0)
+                .attr('y2', height - ordinalScale(d.name));
+            focus.select("text")
+                .text(d.name)
+                .attr("x", function() {
+                    if (d.end > new Date(1997, 6, 1)) {
+                        return -100
+                    } else
+                        return 9;
+                });
+            focus.select("text.dates")
+                .text(parseDate(d.start) + "-" + parseDate(d.end))
+                .attr("x", function() {
+                    if (d.end > new Date(1997, 6, 1)) {
+                        return -100
+                    } else
+                        return 9;
+                });
+        }
+
+    });
+
+
+    ////////////////////////////NORTHERN IRELAND PLOT
+    d3.csv("n_ireland.csv", function (d) {
+        return {
+            row: +d.Row,
+            name: d.Name,
+            start: new Date(d.start),
+            end: new Date(d.end),
+            party: d.Party,
+            country: d.Country
+        };
+    }).then(function (data) {
+
+        console.log(data);
+
+        //SVG
+        var margin = {top: 20, right: 20, bottom: 30, left: 125},
+            width = 650 - margin.left - margin.right,
+            height = 600 - margin.top - margin.bottom;
+
+        var plot_svg = d3.select('#n_ireland')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        //background image
+        plot_svg.append("svg:image")
+            .attr('xlink:href', "img/n_irl.gif")
+            .attr("width", width)
+            .attr("height", height)
+            .style("opacity", 0.2);
+
+        //COLORS
+        var color = d3.scaleOrdinal()
+            .domain(data.map(d => d.party))
+            .range([
+                '#e78ac3',
+                '#a6d854',
+                '#ffd92f'
+            ]);
+
+        //TITLE
+        plot_svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " , 0)")
+            .style("text-anchor", "middle")
+            .style("font-family", "Aclonica")
+            .style("font-size", "1em")
+            .text("NORTHERN IRELAND");
+
+        //AXES
+        var timeScale = d3.scaleTime()
+            .domain([new Date(1921, 1, 1), new Date(2019, 3, 1)])
+            .range([0, width]);
+
+        var ordinalScale = d3.scaleBand()
+            .domain(data.map(d => d.name))
+            .range([0, height])
+            .paddingInner(0.25);
+
+        var xAxis = d3.axisBottom()
+            .scale(timeScale);
+        var yAxis = d3.axisLeft()
+            .scale(ordinalScale);
+
+        //x-axis
+        plot_svg.append('g')
+            .attr('transform', 'translate(0,' + height + ')')
+            .attr('class', 'x axis')
+            .call(xAxis);
+
+        //adapted from http://www.d3noob.org/2012/12/adding-axis-labels-to-d3js-graph.html
+        plot_svg.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom - 3) + ")")
+            .style("text-anchor", "middle")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em")
+            .text("Year");
+
+        //y-axis
+        plot_svg.append('g')
+            .attr('transform', 'translate(0,0)')
+            .attr('class', 'y axis')
+            .call(yAxis);
+
+        //adapted from http://www.d3noob.org/2012/12/adding-axis-labels-to-d3js-graph.html
+        plot_svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em")
+            .text("Leader");
+
+        var rects = plot_svg.selectAll("rect")
+            .data(data);
+
+        rects.enter().append("rect")
+            .attr("x", function (d) {
+                return timeScale(d.start);
+            })
+            .attr("y", function (d) {
+                return ordinalScale(d.name);
+            })
+            .attr("width", function (d) {
+                return timeScale(d.end) - timeScale(d.start)
+            })
+            .attr("height", ordinalScale.bandwidth())
+            .style('fill', function (d) {
+                return color(d.party);
+            })
+            .attr("class", "time-block");
+
+        //LEGEND
+        //adapted from http://bl.ocks.org/Ctuauden/52d057254665400f561ef73cb6e5841a
+        var legend = plot_svg.selectAll(".legend")
+            .data(color.domain())
+            .enter()
+            .append("g")
+            .attr("class", "legend")
+            .attr("transform", "translate(" + 100 + "," + 60 + ")");
+
+        legend.append("rect")
+            .attr("x", width-250)
+            .attr("y", function(d, i) { return 20 * i; })
+            .attr("width", 15)
+            .attr("height", 15)
+            .style("fill", function(d) { return color(d)});
+
+        //legend labels
+        legend.append("text")
+            .attr("x", width-225)
+            .attr("text-anchor", "right")
+            .attr("dy", "1em")
+            .attr("y", function(d, i) { return 20 * i; })
+            .text(function(d) {return d})
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em");
+
+        //legend title
+        legend.append("text")
+            .attr("x",width - 215)
+            .attr('text-anchor', 'right')
+            .attr("dy", "-.2em")
+            .attr("y",-10)
+            .text("Political Party")
+            .style("font-family", "Aclonica")
+            .style("font-size", "0.75em");
+
+        //TOOLTIP
+        //adapted from https://bl.ocks.org/mbostock/3902569
+        var focus = plot_svg.append("g")
+            .attr("class", "focus")
+            .style("display", "none");
+
+        focus.append("text")
+            .attr("class", "name")
+            .attr("x", 9)
+            .attr("dy", ".35em")
+            .style("font-family", "Arial")
+            .style("font-size", "0.85em");
+
+        focus.append("text")
+            .attr("class", "dates")
+            .attr("x", 9)
+            .attr("dy", "1.5em")
+            .style("font-family", "Arial")
+            .style("font-size", "0.75em");
+
+        focus.append('line')
+            .classed('y', true);
+
+        plot_svg.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("height", height)
+            .on("mouseover", function() { focus.style("display", null); })
+            .on("mouseout", function() { focus.style("display", "none"); })
+            .on("mousemove", mousemove);
+
+        function mousemove() {
+            var x0 = timeScale.invert(d3.mouse(this)[0]),
+                i = bisectDate(data, x0, 1),
+                d0 = data[i - 1],
+                d1 = data[i],
+                d = x0 - d0.start > d1.end - x0 ? d1 : d0;
+            focus.attr("transform", "translate(" + timeScale(d.start) + "," + ordinalScale(d.name) + ")");
+            focus.select('line.y')
+                .attr('x1', 0)
+                .attr('x2', 0)
+                .attr('y1', 0)
+                .attr('y2', height - ordinalScale(d.name));
+            focus.select("text.name")
+                .text(d.name)
+                .attr("x", function() {
+                    if (d.end > new Date(1998, 6, 1)) {
+                        return -100
+                    } else
+                        return 9;
+                });
+            focus.select("text.dates")
+                .text(parseDate(d.start) + "-" + parseDate(d.end))
+                .attr("x", function() {
+                    if (d.end > new Date(1998, 6, 1)) {
+                        return -100
+                    } else
+                        return 9;
+                });
+        }
+    });
+
+</script>
